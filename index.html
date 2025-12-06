@@ -14,6 +14,7 @@
 
         <div class="camera-container">
             <video id="cameraPreview" autoplay playsinline></video>
+            <canvas id="overlayCanvas"></canvas>
             <div id="micIndicator" class="mic-indicator">Mic: idle</div>
             <div id="listeningState" class="listening-state">Say "Hey Tato" to activate voice commands</div>
         </div>
@@ -41,6 +42,11 @@
 
         <div id="status" class="status">Initializing...</div>
     </div>
+
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <!-- Tesseract.js -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>

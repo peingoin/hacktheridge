@@ -10,6 +10,8 @@ import { UIManager } from './ui.js';
 import { WakeWordDetector } from './wakeWordDetector.js';
 import { VoiceCommands } from './voiceCommands.js';
 import { GPTCleaner } from './gptCleaner.js';
+import { HandTracker } from './handTracker.js';
+import { PinchCapture } from './pinchCapture.js';
 
 class BracketReaderApp {
     constructor() {
@@ -20,6 +22,9 @@ class BracketReaderApp {
         this.wakeWordDetector = null;
         this.voiceCommands = null;
         this.textCleaner = null;
+        this.handTracker = null;
+        this.pinchCapture = null;
+        this.overlayCanvas = null;
 
         this.videoElement = null;
 
@@ -31,18 +36,41 @@ class BracketReaderApp {
         try {
             // Get DOM elements
             this.videoElement = document.getElementById('cameraPreview');
+            this.overlayCanvas = document.getElementById('overlayCanvas');
             this.ui = new UIManager();
             this.ui.setStatus('Initializing camera...');
 
             // Initialize camera (video only)
             this.camera = new CameraManager(this.videoElement);
             await this.camera.initialize();
+            // keep overlay in sync with video size
+            this.videoElement.addEventListener('loadedmetadata', () => {
+                this.overlayCanvas.width = this.videoElement.videoWidth;
+                this.overlayCanvas.height = this.videoElement.videoHeight;
+            });
 
             // Initialize components
             this.ocrReader = new OCRReader();
             this.speechManager = new SpeechManager();
             this.speechManager.setRate(this.ui.getSpeechRate());
             this.textCleaner = new GPTCleaner();
+            this.pinchCapture = new PinchCapture(this.videoElement, this.overlayCanvas, (canvas) => {
+                // show captured preview in recognized text area as a debug link
+                this.ui.setStatus('Captured rectangle via pinch.');
+                this.ui.displayRecognizedText('Captured region (see preview).');
+                if (canvas) {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const img = document.createElement('img');
+                    img.src = dataUrl;
+                    img.alt = 'Captured region';
+                    img.style.maxWidth = '100%';
+                    const container = document.getElementById('recognizedText');
+                    if (container) {
+                        container.innerHTML = '';
+                        container.appendChild(img);
+                    }
+                }
+            });
 
             // Initialize wake word + commands
             this.ui.setStatus('Initializing wake word...');
@@ -52,6 +80,17 @@ class BracketReaderApp {
                 onStateChange: (active) => this.ui.showWakeWordListening(active)
             });
             await this.wakeWordDetector.initialize();
+
+            // Initialize hand tracking for pinch capture
+            this.handTracker = new HandTracker(this.videoElement, (results) => {
+                const landmarks = results?.multiHandLandmarks?.[0];
+                if (landmarks && this.pinchCapture) {
+                    this.pinchCapture.update(landmarks);
+                } else if (this.pinchCapture) {
+                    this.pinchCapture.update(null);
+                }
+            });
+            await this.handTracker.initialize();
 
             this.voiceCommands = new VoiceCommands({
                 onListeningStart: () => this.ui.showCommandListening(),
