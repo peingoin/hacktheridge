@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bracket Reader - Dyslexia Accessibility</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Bracket Reader</h1>
+        </header>
+
+        <div class="camera-container">
+            <video id="cameraPreview" autoplay playsinline></video>
+            <div id="micIndicator" class="mic-indicator">Mic: idle</div>
+            <div id="listeningState" class="listening-state">Say "Hey Tato" to activate voice commands</div>
+        </div>
+
+        <div class="instructions" id="instructions">Say "Hey Tato" then give a command</div>
+        <div class="note">Microphone and wake word detection work best over HTTPS or localhost.</div>
+
+        <div class="controls">
+            <div class="buttons">
+                <button id="readButton" disabled>Read</button>
+                <button id="repeatButton" disabled>Repeat</button>
+                <button id="stopButton" disabled>Stop</button>
+            </div>
+            <div class="speech-controls">
+                <label for="speechRate">Reading speed:</label>
+                <input type="range" id="speechRate" min="0.5" max="2" step="0.1" value="1">
+                <span id="rateValue">1.0x</span>
+            </div>
+        </div>
+
+        <div class="result-container">
+            <h3>Recognized Text</h3>
+            <div id="recognizedText" class="recognized-text"></div>
+        </div>
+
+        <div id="status" class="status">Initializing...</div>
+    </div>
+
+    <!-- Tesseract.js -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+
+    <!-- App Scripts -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
