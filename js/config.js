@@ -1,2 +1,2 @@
-export const PICOVOICE_ACCESS_KEY = 'omu9WB+AnBRCg+fXo4c+ui/NTMMekiGl8V5UGt0r8DFalO4MBB1vFg==';
+export const PICOVOICE_ACCESS_KEY = '6Zqe9Hyh3keFDE94gvZPI2ItoKxAK8WrpA56BbEhHGbjFOq3kczAxQ==';
 
