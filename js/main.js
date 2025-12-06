@@ -9,7 +9,7 @@ import { SpeechManager } from './speechManager.js';
 import { UIManager } from './ui.js';
 import { WakeWordDetector } from './wakeWordDetector.js';
 import { VoiceCommands } from './voiceCommands.js';
-import { GeminiCleaner } from './geminiCleaner.js';
+import { GPTCleaner } from './gptCleaner.js';
 
 class BracketReaderApp {
     constructor() {
@@ -19,7 +19,7 @@ class BracketReaderApp {
         this.ui = null;
         this.wakeWordDetector = null;
         this.voiceCommands = null;
-        this.geminiCleaner = null;
+        this.textCleaner = null;
 
         this.videoElement = null;
 
@@ -42,7 +42,7 @@ class BracketReaderApp {
             this.ocrReader = new OCRReader();
             this.speechManager = new SpeechManager();
             this.speechManager.setRate(this.ui.getSpeechRate());
-            this.geminiCleaner = new GeminiCleaner();
+            this.textCleaner = new GPTCleaner();
 
             // Initialize wake word + commands
             this.ui.setStatus('Initializing wake word...');
@@ -158,16 +158,16 @@ class BracketReaderApp {
             const text = await this.ocrReader.recognizeText(frameCanvas);
 
             let finalText = text;
-            if (this.geminiCleaner?.hasKey()) {
+            if (this.textCleaner?.hasKey()) {
                 try {
-                    this.ui.setStatus('Cleaning text with Gemini...');
-                    const cleaned = await this.geminiCleaner.cleanText(text);
+                    this.ui.setStatus('Cleaning text with GPT-4o mini...');
+                    const cleaned = await this.textCleaner.cleanText(text);
                     if (cleaned) {
                         finalText = cleaned;
                     }
                 } catch (err) {
-                    console.error('Gemini cleanup error:', err);
-                    this.ui.setStatus('Gemini cleanup unavailable. Using raw OCR.', 'error');
+                    console.error('GPT cleanup error:', err);
+                    this.ui.setStatus('Cleanup unavailable. Using raw OCR.', 'error');
                 }
             }
 
