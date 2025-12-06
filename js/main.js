@@ -182,9 +182,6 @@ class BracketReaderApp {
                 this.speechManager.setRate(this.speechManager.getRate() - 0.1);
                 this.ui.setStatus('Decreased speech speed');
                 break;
-            case 'next':
-                this.ui.setStatus('Command: next (stub)');
-                break;
             default:
                 this.ui.setStatus('No matching command heard.', 'error');
         }

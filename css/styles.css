@@ -340,3 +340,27 @@ button {
         font-size: 1em;
     }
 }
+
+@media (max-width: 900px) {
+    .container {
+        padding: 20px;
+    }
+
+    .layout {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .camera-container {
+        margin-bottom: 16px;
+    }
+
+    .buttons {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .buttons button {
+        width: 100%;
+    }
+}

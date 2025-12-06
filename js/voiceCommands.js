@@ -64,7 +64,6 @@ export class VoiceCommands {
         if (text.includes('read')) return { command: 'read', transcript };
         if (text.includes('repeat')) return { command: 'repeat', transcript };
         if (text.includes('stop')) return { command: 'stop', transcript };
-        if (text.includes('next')) return { command: 'next', transcript };
         if (text.includes('faster')) return { command: 'faster', transcript };
         if (text.includes('slower') || text.includes('slow')) return { command: 'slower', transcript };
 
