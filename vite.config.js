@@ -1,9 +1,6 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vite'
 
 export default defineConfig({
-  publicDir: 'public',
-  server: {
-    open: true
-  }
-});
-
+  plugins: [],
+  base: '/hacktheridge/', // repo name
+})

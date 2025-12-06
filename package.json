@@ -1,18 +1,21 @@
 {
-  "name": "bracket-reader",
-  "version": "1.0.0",
+  "name": "dyslexibility",
+  "homepage": "https://peingoin.github.io/hacktheridge/",
   "type": "module",
   "dependencies": {
     "@picovoice/porcupine-web": "^3.0.0",
     "@picovoice/web-voice-processor": "^4.0.0"
   },
-  "devDependencies": {
-    "vite": "^5.4.21"
-  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "gpt:test": "node scripts/gpt-test.js"
+    "gpt:test": "node scripts/gpt-test.js",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0",
+    "vite": "^7.2.6"
   }
 }
