@@ -1,4 +1,4 @@
-import { PorcupineWorkerFactory } from '@picovoice/porcupine-web';
+import { PorcupineWorker } from '@picovoice/porcupine-web';
 import { WebVoiceProcessor } from '@picovoice/web-voice-processor';
 import { PICOVOICE_ACCESS_KEY } from './config.js';
 
@@ -11,8 +11,7 @@ export class WakeWordDetector {
         this.onError = onError;
         this.onStateChange = onStateChange;
 
-        this.porcupineWorker = null;
-        this.voiceProcessor = null;
+        this.porcupine = null;
         this.initialized = false;
         this.listening = false;
     }
@@ -25,17 +24,22 @@ export class WakeWordDetector {
         }
 
         try {
-            this.porcupineWorker = await PorcupineWorkerFactory.create(
+            this.porcupine = await PorcupineWorker.create(
                 PICOVOICE_ACCESS_KEY,
                 [
                     {
                         label: 'hey-tato',
-                        publicPath: '/wake-words/hey-tato.ppn'
+                        publicPath: new URL(
+                            `${import.meta.env.BASE_URL || ''}wake-words/hey-tato.ppn`,
+                            window.location.href
+                        ).href,
+                        sensitivity: 0.7
                     }
                 ],
+                (detection) => this.handleDetection(detection.label),
+                { publicPath: 'https://cdn.picovoice.ai/porcupine/porcupine_params.pv' },
                 {
-                    processErrorCallback: (err) => this.handleError(err),
-                    keywordDetectionCallback: (keywordLabel) => this.handleDetection(keywordLabel)
+                    processErrorCallback: (err) => this.handleError(err)
                 }
             );
 
@@ -53,7 +57,7 @@ export class WakeWordDetector {
         }
 
         try {
-            this.voiceProcessor = await WebVoiceProcessor.start(this.porcupineWorker);
+            await WebVoiceProcessor.subscribe(this.porcupine);
             this.listening = true;
             this.onStateChange?.(true);
         } catch (error) {
@@ -64,7 +68,8 @@ export class WakeWordDetector {
     async stopListening() {
         if (!this.listening) return;
         try {
-            await WebVoiceProcessor.stop();
+            await WebVoiceProcessor.unsubscribe(this.porcupine);
+            await WebVoiceProcessor.reset();
         } catch (error) {
             // ignore stop errors but report
             this.handleError(error);
