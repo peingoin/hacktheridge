@@ -24,24 +24,31 @@ export class WakeWordDetector {
         }
 
         try {
+            const keywordUrl = new URL(
+                `${import.meta.env.BASE_URL || ''}wake-words/hey-tato.ppn`,
+                window.location.href
+            ).href;
+            const modelUrl = new URL(
+                `${import.meta.env.BASE_URL || ''}porcupine_params.pv`,
+                window.location.href
+            ).href;
+
+            // Preflight fetch to surface clearer errors when the files are missing or HTML.
+            await this.validateAsset(keywordUrl, 'keyword (.ppn)');
+            await this.validateAsset(modelUrl, 'model (.pv)');
+
             this.porcupine = await PorcupineWorker.create(
                 PICOVOICE_ACCESS_KEY,
                 [
                     {
                         label: 'hey-tato',
-                        publicPath: new URL(
-                            `${import.meta.env.BASE_URL || ''}wake-words/hey-tato.ppn`,
-                            window.location.href
-                        ).href,
+                        publicPath: keywordUrl,
                         sensitivity: 0.7
                     }
                 ],
                 (detection) => this.handleDetection(detection.label),
                 {
-                    publicPath: new URL(
-                        `${import.meta.env.BASE_URL || ''}porcupine_params.pv`,
-                        window.location.href
-                    ).href
+                    publicPath: modelUrl
                 },
                 {
                     processErrorCallback: (err) => this.handleError(err)
@@ -96,5 +103,24 @@ export class WakeWordDetector {
         const message = error?.message || 'Microphone or wake word error';
         console.error(message, error);
         this.onError?.(message);
+    }
+
+    async validateAsset(url, label) {
+        try {
+            const resp = await fetch(url, { method: 'GET' });
+            if (!resp.ok) {
+                throw new Error(`${label} fetch failed: ${resp.status} ${resp.statusText}`);
+            }
+            const contentType = resp.headers.get('content-type') || '';
+            if (contentType.includes('text/html')) {
+                throw new Error(`${label} at ${url} is HTML (likely 404).`);
+            }
+            const size = Number(resp.headers.get('content-length') || 0);
+            if (size && size < 1000) {
+                console.warn(`${label} at ${url} is unusually small (${size} bytes).`);
+            }
+        } catch (err) {
+            throw new Error(`Failed to load ${label} at ${url}: ${err.message}`);
+        }
     }
 }
