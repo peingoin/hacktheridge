@@ -9,6 +9,7 @@ import { SpeechManager } from './speechManager.js';
 import { UIManager } from './ui.js';
 import { WakeWordDetector } from './wakeWordDetector.js';
 import { VoiceCommands } from './voiceCommands.js';
+import { GeminiCleaner } from './geminiCleaner.js';
 
 class BracketReaderApp {
     constructor() {
@@ -18,6 +19,7 @@ class BracketReaderApp {
         this.ui = null;
         this.wakeWordDetector = null;
         this.voiceCommands = null;
+        this.geminiCleaner = null;
 
         this.videoElement = null;
 
@@ -40,6 +42,7 @@ class BracketReaderApp {
             this.ocrReader = new OCRReader();
             this.speechManager = new SpeechManager();
             this.speechManager.setRate(this.ui.getSpeechRate());
+            this.geminiCleaner = new GeminiCleaner();
 
             // Initialize wake word + commands
             this.ui.setStatus('Initializing wake word...');
@@ -154,15 +157,29 @@ class BracketReaderApp {
             const frameCanvas = this.captureFrame();
             const text = await this.ocrReader.recognizeText(frameCanvas);
 
-            if (!text) {
+            let finalText = text;
+            if (this.geminiCleaner?.hasKey()) {
+                try {
+                    this.ui.setStatus('Cleaning text with Gemini...');
+                    const cleaned = await this.geminiCleaner.cleanText(text);
+                    if (cleaned) {
+                        finalText = cleaned;
+                    }
+                } catch (err) {
+                    console.error('Gemini cleanup error:', err);
+                    this.ui.setStatus('Gemini cleanup unavailable. Using raw OCR.', 'error');
+                }
+            }
+
+            if (!finalText) {
                 this.ui.setStatus('No text recognized. Try again.', 'error');
                 return;
             }
 
-            this.ui.displayRecognizedText(text);
+            this.ui.displayRecognizedText(finalText);
             this.ui.setStatus('Reading text...', 'success');
 
-            this.speechManager.speak(text, () => {
+            this.speechManager.speak(finalText, () => {
                 this.ui.setStatus('Listening for wake word...', 'success');
                 this.ui.setStopButtonEnabled(false);
             });
