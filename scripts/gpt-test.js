@@ -23,6 +23,12 @@ async function main() {
     ]
   };
 
+  console.log('Posting to OpenAI:', {
+    endpoint: ENDPOINT,
+    model: MODEL,
+    body
+  });
+
   const resp = await fetch(ENDPOINT, {
     method: 'POST',
     headers: {
@@ -33,9 +39,10 @@ async function main() {
   });
 
   const text = await resp.text();
+  console.log('Raw response:', text);
+
   if (!resp.ok) {
     console.error(`Request failed: ${resp.status} ${resp.statusText}`);
-    console.error(text);
     process.exit(1);
   }
 
