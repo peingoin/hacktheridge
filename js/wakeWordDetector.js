@@ -33,6 +33,8 @@ export class WakeWordDetector {
                 window.location.href
             ).href;
 
+            console.log('Porcupine assets:', { keywordUrl, modelUrl });
+
             // Preflight fetch to surface clearer errors when the files are missing or HTML.
             await this.validateAsset(keywordUrl, 'keyword (.ppn)');
             await this.validateAsset(modelUrl, 'model (.pv)');
