@@ -37,7 +37,12 @@ export class WakeWordDetector {
                     }
                 ],
                 (detection) => this.handleDetection(detection.label),
-                { publicPath: 'https://cdn.picovoice.ai/porcupine/porcupine_params.pv' },
+                {
+                    publicPath: new URL(
+                        `${import.meta.env.BASE_URL || ''}porcupine_params.pv`,
+                        window.location.href
+                    ).href
+                },
                 {
                     processErrorCallback: (err) => this.handleError(err)
                 }
