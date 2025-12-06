@@ -1,0 +1,9 @@
+{
+  "name": "bracket-reader",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@picovoice/porcupine-web": "^3.0.0",
+    "@picovoice/web-voice-processor": "^4.0.0"
+  }
+}
