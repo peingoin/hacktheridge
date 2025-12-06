@@ -32,21 +32,35 @@ export class HandTracker {
             }
         });
 
-        // Initialize camera
-        this.camera = new Camera(this.videoElement, {
-            onFrame: async () => {
-                await this.hands.send({ image: this.videoElement });
-            },
-            width: 1280,
-            height: 720
-        });
+        // If video already has a stream, process frames directly.
+        if (this.videoElement.srcObject) {
+            const processFrame = async () => {
+                if (this.videoElement.readyState >= 2) {
+                    await this.hands.send({ image: this.videoElement });
+                }
+                this.frameReq = requestAnimationFrame(processFrame);
+            };
+            this.frameReq = requestAnimationFrame(processFrame);
+        } else {
+            // Initialize camera via MediaPipe helper
+            this.camera = new Camera(this.videoElement, {
+                onFrame: async () => {
+                    await this.hands.send({ image: this.videoElement });
+                },
+                width: 1280,
+                height: 720
+            });
 
-        await this.camera.start();
+            await this.camera.start();
+        }
     }
 
     stop() {
         if (this.camera) {
             this.camera.stop();
+        }
+        if (this.frameReq) {
+            cancelAnimationFrame(this.frameReq);
         }
     }
 
