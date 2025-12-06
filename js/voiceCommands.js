@@ -60,6 +60,7 @@ export class VoiceCommands {
     mapCommand(transcript = '') {
         const text = transcript.toLowerCase();
 
+        if (text.includes('read picture')) return { command: 'read-picture', transcript };
         if (text.includes('read')) return { command: 'read', transcript };
         if (text.includes('repeat')) return { command: 'repeat', transcript };
         if (text.includes('stop')) return { command: 'stop', transcript };

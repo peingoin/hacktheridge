@@ -25,6 +25,7 @@ class BracketReaderApp {
         this.handTracker = null;
         this.pinchCapture = null;
         this.overlayCanvas = null;
+        this.lastCapturedCanvas = null;
 
         this.videoElement = null;
 
@@ -69,6 +70,7 @@ class BracketReaderApp {
                         container.innerHTML = '';
                         container.appendChild(img);
                     }
+                    this.lastCapturedCanvas = canvas;
                 }
             });
 
@@ -168,6 +170,10 @@ class BracketReaderApp {
                 this.ui.setStatus('Command: stop');
                 this.handleStop();
                 break;
+            case 'read-picture':
+                this.ui.setStatus('Command: read picture');
+                await this.handleReadPicture();
+                break;
             case 'faster':
                 this.speechManager.setRate(this.speechManager.getRate() + 0.1);
                 this.ui.setStatus('Increased speech speed');
@@ -194,37 +200,7 @@ class BracketReaderApp {
 
         try {
             const frameCanvas = this.captureFrame();
-            const text = await this.ocrReader.recognizeText(frameCanvas);
-
-            let finalText = text;
-            if (this.textCleaner?.hasKey()) {
-                try {
-                    this.ui.setStatus('Cleaning text with GPT-4o mini...');
-                    const cleaned = await this.textCleaner.cleanText(text);
-                    if (cleaned) {
-                        finalText = cleaned;
-                    }
-                } catch (err) {
-                    console.error('GPT cleanup error:', err);
-                    this.ui.setStatus('Cleanup unavailable. Using raw OCR.', 'error');
-                }
-            }
-
-            if (!finalText) {
-                this.ui.setStatus('No text recognized. Try again.', 'error');
-                return;
-            }
-
-            this.ui.displayRecognizedText(finalText);
-            this.ui.setStatus('Reading text...', 'success');
-
-            this.speechManager.speak(finalText, () => {
-                this.ui.setStatus('Listening for wake word...', 'success');
-                this.ui.setStopButtonEnabled(false);
-            });
-
-            this.ui.setRepeatButtonEnabled(true);
-            this.ui.setStopButtonEnabled(true);
+            await this.processCanvas(frameCanvas);
         } catch (error) {
             console.error('Read error:', error);
             this.ui.setStatus('Error: ' + error.message, 'error');
@@ -232,6 +208,60 @@ class BracketReaderApp {
             this.isProcessing = false;
             this.ui.setReadButtonEnabled(true);
         }
+    }
+
+    async handleReadPicture() {
+        if (this.isProcessing) return;
+        if (!this.lastCapturedCanvas) {
+            this.ui.setStatus('No captured picture available. Pinch to capture first.', 'error');
+            return;
+        }
+        this.isProcessing = true;
+        this.ui.setReadButtonEnabled(false);
+        this.ui.setStatus('Processing captured picture...');
+        try {
+            await this.processCanvas(this.lastCapturedCanvas);
+        } catch (error) {
+            console.error('Read picture error:', error);
+            this.ui.setStatus('Error: ' + error.message, 'error');
+        } finally {
+            this.isProcessing = false;
+            this.ui.setReadButtonEnabled(true);
+        }
+    }
+
+    async processCanvas(frameCanvas) {
+        const text = await this.ocrReader.recognizeText(frameCanvas);
+
+        let finalText = text;
+        if (this.textCleaner?.hasKey()) {
+            try {
+                this.ui.setStatus('Cleaning text with GPT-4o mini...');
+                const cleaned = await this.textCleaner.cleanText(text);
+                if (cleaned) {
+                    finalText = cleaned;
+                }
+            } catch (err) {
+                console.error('GPT cleanup error:', err);
+                this.ui.setStatus('Cleanup unavailable. Using raw OCR.', 'error');
+            }
+        }
+
+        if (!finalText) {
+            this.ui.setStatus('No text recognized. Try again.', 'error');
+            return;
+        }
+
+        this.ui.displayRecognizedText(finalText);
+        this.ui.setStatus('Reading text...', 'success');
+
+        this.speechManager.speak(finalText, () => {
+            this.ui.setStatus('Listening for wake word...', 'success');
+            this.ui.setStopButtonEnabled(false);
+        });
+
+        this.ui.setRepeatButtonEnabled(true);
+        this.ui.setStopButtonEnabled(true);
     }
 
     handleRepeat() {
